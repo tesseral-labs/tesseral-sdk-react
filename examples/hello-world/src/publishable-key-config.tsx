@@ -12,15 +12,17 @@ const PublishableKeyConfigContext = createContext<
 
 export interface PublishableKeyConfigProviderProps {
   publishableKey: string;
+  configApiHostname: string;
   children?: React.ReactNode;
 }
 
 export function PublishableKeyConfigProvider({
   publishableKey,
+  configApiHostname,
   children,
 }: PublishableKeyConfigProviderProps) {
   const { data } = useFetch<PublishableKeyConfig>(
-    `https://config.tesseral.example.com/v1/config/${publishableKey}`,
+    `https://${configApiHostname}/v1/config/${publishableKey}`,
   );
   if (!data) {
     return null;

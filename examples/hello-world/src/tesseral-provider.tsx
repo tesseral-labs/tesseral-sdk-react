@@ -11,15 +11,20 @@ import { TesseralContext } from "@/context";
 
 interface TesseralProviderProps {
   publishableKey: string;
+  configApiHostname?: string;
   children?: React.ReactNode;
 }
 
 export function TesseralProvider({
   publishableKey,
+  configApiHostname = "config.tesseral.com",
   children,
 }: TesseralProviderProps) {
   return (
-    <PublishableKeyConfigProvider publishableKey={publishableKey}>
+    <PublishableKeyConfigProvider
+      publishableKey={publishableKey}
+      configApiHostname={configApiHostname}
+    >
       <TesseralProviderInner>{children}</TesseralProviderInner>
     </PublishableKeyConfigProvider>
   );
@@ -85,10 +90,6 @@ function useAccessToken(): string | undefined {
     }
     return parsedAccessToken.exp > Date.now() / 1000;
   }, [parsedAccessToken]);
-
-  if (parsedAccessToken && !accessTokenIsLikelyValid) {
-    window.location.href = `https://${vaultDomain}/login`;
-  }
 
   useEffect(() => {
     if (accessTokenIsLikelyValid) {
