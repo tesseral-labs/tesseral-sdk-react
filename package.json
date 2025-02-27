@@ -12,7 +12,6 @@
     "type": "git",
     "url": "https://github.com/tesseral-labs/tesseral-react"
   },
-  "private": true,
   "devDependencies": {
     "prettier": "^3.5.2",
     "typescript": "^5.7.3"
