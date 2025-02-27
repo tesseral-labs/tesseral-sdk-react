@@ -2,13 +2,22 @@
   "name": "ucarion-laresset-react",
   "version": "0.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "files": ["dist"],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "fmt": "prettier --write src",
+    "build": "tsc"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/tesseral-labs/tesseral-react"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "prettier": "^3.5.2",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "@types/react": "^19.0.10"
+  }
 }
