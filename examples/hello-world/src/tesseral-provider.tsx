@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, {useCallback, useEffect, useMemo} from "react";
 import {
   PublishableKeyConfigProvider,
   useProjectId,
@@ -61,16 +61,7 @@ function TesseralProviderInner({ children }: { children?: React.ReactNode }) {
   );
 }
 
-const REFRESH_TOKEN_FETCH_PARAMS = {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: "{}",
-  credentials: "include" as const,
-};
-
-function useAccessToken(): string | undefined {
+function useAccessToken(): string | null {
   const projectId = useProjectId();
   const vaultDomain = useVaultDomain();
   const [accessToken, setAccessToken] = useLocalStorage(
@@ -99,8 +90,16 @@ function useAccessToken(): string | undefined {
     async function refreshAccessToken() {
       const response = await fetch(
         `https://${vaultDomain}/api/frontend/v1/refresh`,
-        REFRESH_TOKEN_FETCH_PARAMS,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: "{}",
+          credentials: "include",
+        },
       );
+
       if (response.status === 401) {
         window.location.href = `https://${vaultDomain}/login`;
       }
@@ -119,4 +118,28 @@ function useAccessToken(): string | undefined {
   }, [accessTokenIsLikelyValid]);
 
   return accessToken;
+}
+
+export function useLogout(): () => void {
+  const projectId = useProjectId();
+  const vaultDomain = useVaultDomain();
+  const [_, setAccessToken] = useLocalStorage(
+    `tesseral_${projectId}_access_token`,
+  );
+
+  return useCallback(() => {
+    async function logout() {
+      await fetch(`https://${vaultDomain}/api/frontend/v1/logout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: "{}",
+        credentials: "include",
+      });
+    }
+
+    logout();
+    setAccessToken(null)
+  }, [setAccessToken, vaultDomain])
 }
