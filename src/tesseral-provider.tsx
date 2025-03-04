@@ -7,10 +7,12 @@ import {
 import { useLocalStorage } from "./use-localstorage";
 import { parseAccessToken } from "./parse-access-token";
 import { TesseralContext } from "./context";
+import { useFrontendApiClient } from "./use-frontend-api-client";
+import { TesseralError } from "@tesseral/tesseral-vanilla-clientside";
 
 interface TesseralProviderProps {
   publishableKey: string;
-  configApiHostname?: string;
+  configApiHostname: string;
   children?: React.ReactNode;
 }
 
@@ -63,6 +65,7 @@ function TesseralProviderInner({ children }: { children?: React.ReactNode }) {
 function useAccessToken(): string | null {
   const projectId = useProjectId();
   const vaultDomain = useVaultDomain();
+  const frontendApiClient = useFrontendApiClient();
   const [accessToken, setAccessToken] = useLocalStorage(
     `tesseral_${projectId}_access_token`,
   );
@@ -87,30 +90,16 @@ function useAccessToken(): string | null {
     }
 
     async function refreshAccessToken() {
-      const response = await fetch(
-        `https://${vaultDomain}/api/frontend/v1/refresh`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: "{}",
-          credentials: "include",
-        },
-      );
+      try {
+        const { accessToken } = await frontendApiClient.refresh({});
+        setAccessToken(accessToken!);
+      } catch (e) {
+        if (e instanceof TesseralError && e.statusCode === 401) {
+          window.location.href = `https://${vaultDomain}/login`;
+        }
 
-      if (response.status === 401) {
-        window.location.href = `https://${vaultDomain}/login`;
+        throw e;
       }
-
-      if (response.status !== 200) {
-        throw new Error(
-          `Unexpected response from refresh endpoint: ${response.status}`,
-        );
-      }
-
-      const body = await response.json();
-      setAccessToken(body.accessToken);
     }
 
     refreshAccessToken();
@@ -122,23 +111,17 @@ function useAccessToken(): string | null {
 export function useLogout(): () => void {
   const projectId = useProjectId();
   const vaultDomain = useVaultDomain();
+  const frontendApiClient = useFrontendApiClient();
   const [_, setAccessToken] = useLocalStorage(
     `tesseral_${projectId}_access_token`,
   );
 
   return useCallback(() => {
     async function logout() {
-      await fetch(`https://${vaultDomain}/api/frontend/v1/logout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: "{}",
-        credentials: "include",
-      });
+      await frontendApiClient.logout({});
+      setAccessToken(null);
     }
 
     logout();
-    setAccessToken(null);
   }, [setAccessToken, vaultDomain]);
 }
