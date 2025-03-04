@@ -1,5 +1,5 @@
 import React, { createContext, useContext } from "react";
-import { useFetch } from "@/use-fetch";
+import { useFetch } from "./use-fetch";
 
 interface PublishableKeyConfig {
   projectId: string;

@@ -1,7 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { useAccessToken, useOrganization, useUser } from "@/context";
-import {TesseralProvider, useLogout} from "@/tesseral-provider";
+import { TesseralProvider, useAccessToken, useOrganization, useUser, useLogout } from "ucarion-laresset-react";
 
 function App() {
   const organization = useOrganization();

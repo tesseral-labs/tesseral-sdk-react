@@ -3,11 +3,10 @@ import {
   PublishableKeyConfigProvider,
   useProjectId,
   useVaultDomain,
-} from "@/publishable-key-config";
-import { useLocalStorage } from "@/use-localstorage";
-import { useFetch } from "@/use-fetch";
-import { parseAccessToken } from "@/parse-access-token";
-import { TesseralContext } from "@/context";
+} from "./publishable-key-config";
+import { useLocalStorage } from "./use-localstorage";
+import { parseAccessToken } from "./parse-access-token";
+import { TesseralContext } from "./context";
 
 interface TesseralProviderProps {
   publishableKey: string;
