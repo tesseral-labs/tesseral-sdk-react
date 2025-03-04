@@ -7,7 +7,7 @@ export function useFrontendApiClient() {
 
   return useMemo(() => {
     return new TesseralClient({
-      environment: vaultDomain,
+      environment: `https://${vaultDomain}`,
     });
   }, [vaultDomain]);
 }
