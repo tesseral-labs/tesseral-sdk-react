@@ -1,5 +1,4 @@
 export { TesseralProvider } from "./tesseral-provider";
-
 export {
   useTesseral,
   useMaybeAccessToken,
@@ -8,7 +7,9 @@ export {
   useAccessToken,
   useOrganization,
   useUser,
-  useTesseralFrontendApiClient,
+  useSignupUrl,
+  useLoginUrl,
+  useOrganizationSettingsUrl,
+  useUserSettingsUrl,
 } from "./hooks";
-
 export { useLogout } from "./use-logout";

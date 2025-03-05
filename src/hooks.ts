@@ -8,6 +8,7 @@ import { TesseralContext } from "./tesseral-context";
 import { TesseralClient } from "@tesseral/tesseral-vanilla-clientside";
 
 export interface UseTesseralResult {
+  vaultDomain: string;
   frontendApiClient: TesseralClient;
   accessToken?: string;
   organization?: AccessTokenOrganization;
@@ -23,11 +24,12 @@ export function useTesseral(): UseTesseralResult {
     );
   }
   return {
+    vaultDomain: context.vaultDomain,
+    frontendApiClient: context.frontendApiClient,
     accessToken: context.accessToken,
     session: context.session,
     user: context.user,
     organization: context.organization,
-    frontendApiClient: context.frontendApiClient,
   };
 }
 
@@ -73,6 +75,22 @@ export function useUser(): AccessTokenUser {
   return user;
 }
 
-export function useTesseralFrontendApiClient(): TesseralClient {
-  return useTesseral().frontendApiClient;
+export function useSignupUrl(): string {
+  const { vaultDomain } = useTesseral();
+  return `https://${vaultDomain}/signup`;
+}
+
+export function useLoginUrl(): string {
+  const { vaultDomain } = useTesseral();
+  return `https://${vaultDomain}/login`;
+}
+
+export function useOrganizationSettingsUrl(): string {
+  const { vaultDomain } = useTesseral();
+  return `https://${vaultDomain}/organization-settings`;
+}
+
+export function useUserSettingsUrl(): string {
+  const { vaultDomain } = useTesseral();
+  return `https://${vaultDomain}/user-settings`;
 }
