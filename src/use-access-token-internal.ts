@@ -28,7 +28,7 @@ export function useAccessTokenInternal(
   }, [parsedAccessToken, now]);
 
   useEffect(() => {
-    if (!requireLogin || accessTokenIsLikelyValid) {
+    if (accessTokenIsLikelyValid) {
       return;
     }
 

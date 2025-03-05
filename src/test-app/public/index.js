@@ -33170,7 +33170,7 @@
       return parsedAccessToken.exp > now / 1e3;
     }, [parsedAccessToken, now]);
     (0, import_react7.useEffect)(() => {
-      if (!requireLogin || accessTokenIsLikelyValid) {
+      if (accessTokenIsLikelyValid) {
         return;
       }
       async function refreshAccessToken() {
@@ -33273,68 +33273,17 @@
       organization: context.organization
     };
   }
-  function useMaybeAccessToken() {
-    return useTesseral().accessToken;
-  }
-  function useMaybeOrganization() {
-    return useTesseral().organization;
-  }
   function useMaybeUser() {
     return useTesseral().user;
-  }
-  function useAccessToken() {
-    const accessToken = useMaybeAccessToken();
-    if (!accessToken) {
-      throw new Error(
-        `useAccessToken() must be called from a child component of TesseralContext with "requireLogin" set to true`
-      );
-    }
-    return accessToken;
-  }
-  function useOrganization() {
-    const organization = useMaybeOrganization();
-    if (!organization) {
-      throw new Error(
-        `useOrganization() must be called from a child component of TesseralContext with "requireLogin" set to true`
-      );
-    }
-    return organization;
-  }
-  function useUser() {
-    const user = useMaybeUser();
-    if (!user) {
-      throw new Error(
-        `useUser() must be called from a child component of TesseralContext with "requireLogin" set to true`
-      );
-    }
-    return user;
   }
 
   // ../use-logout.ts
   var import_react10 = __toESM(require_react());
-  function useLogout() {
-    const projectId = useProjectId();
-    const vaultDomain = useVaultDomain();
-    const frontendApiClient = useFrontendApiClient();
-    const [_, setAccessToken] = useLocalStorage(
-      `tesseral_${projectId}_access_token`
-    );
-    return (0, import_react10.useCallback)(() => {
-      async function logout() {
-        await frontendApiClient.logout({});
-        setAccessToken(null);
-      }
-      logout();
-    }, [setAccessToken, vaultDomain]);
-  }
 
   // src/index.tsx
   function App() {
-    const organization = useOrganization();
-    const user = useUser();
-    const accessToken = useAccessToken();
-    const logout = useLogout();
-    return /* @__PURE__ */ import_react11.default.createElement("div", null, /* @__PURE__ */ import_react11.default.createElement("h1", null, "Hello, ", user.email, "!"), /* @__PURE__ */ import_react11.default.createElement("div", null, "Organization: ", organization.id, ' ("', organization.displayName, '")'), /* @__PURE__ */ import_react11.default.createElement("div", null, "User: ", user.id, " (", user.email, ")"), /* @__PURE__ */ import_react11.default.createElement("div", null, "Access token: ", accessToken), /* @__PURE__ */ import_react11.default.createElement("button", { onClick: logout }, "Logout"));
+    const user = useMaybeUser();
+    return /* @__PURE__ */ import_react11.default.createElement("div", null, /* @__PURE__ */ import_react11.default.createElement("h1", null, "Hello, ", user?.email, "!"));
   }
   var root = (0, import_client.createRoot)(document.getElementById("react-root"));
   root.render(
@@ -33342,7 +33291,8 @@
       TesseralProvider,
       {
         publishableKey: "publishable_key_78b34yplz6owh3c45jfpykeix",
-        configApiHostname: "config.tesseral.example.com"
+        configApiHostname: "config.tesseral.example.com",
+        requireLogin: false
       },
       /* @__PURE__ */ import_react11.default.createElement(App, null)
     )
