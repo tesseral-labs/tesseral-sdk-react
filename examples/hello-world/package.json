@@ -7,7 +7,7 @@
     "fmt": "prettier --write src"
   },
   "dependencies": {
-    "@tesseral/tesseral-react": "^0.0.6",
+    "@tesseral/tesseral-react": "^0.0.7",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "esbuild": "^0.25.0",

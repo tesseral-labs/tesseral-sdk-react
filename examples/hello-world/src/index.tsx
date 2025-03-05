@@ -1,12 +1,22 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { TesseralProvider, useAccessToken, useOrganization, useUser, useLogout } from "@tesseral/tesseral-react";
+import {
+    TesseralProvider,
+    useAccessToken,
+    useOrganization,
+    useUser,
+    useLogout,
+    useMaybeOrganization, useMaybeUser
+} from "@tesseral/tesseral-react";
 
 function App() {
   const organization = useOrganization();
   const user = useUser();
   const accessToken = useAccessToken();
   const logout = useLogout();
+  //   console.log(useMaybeOrganization());
+  //   console.log(useMaybeUser());
+  //   console.log(useAccessToken());
   return (
     <div>
       <h1>Hello, {user.email}!</h1>

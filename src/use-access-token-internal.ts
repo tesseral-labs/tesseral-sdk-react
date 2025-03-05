@@ -1,10 +1,10 @@
 import { useAccessTokenState } from "./use-access-token-state";
 import { useEffect, useMemo } from "react";
-import { AccessTokenClaims } from "@tesseral/tesseral-vanilla-clientside/api";
 import { TesseralError } from "@tesseral/tesseral-vanilla-clientside";
 import { useFrontendApiClient } from "./use-frontend-api-client";
 import { useVaultDomain } from "./publishable-key-config";
 import { parseAccessToken } from "./parse-access-token";
+import { useDebouncedNow } from "./use-debounced-now";
 
 export function useAccessTokenInternal(
   requireLogin: boolean,
@@ -19,12 +19,17 @@ export function useAccessTokenInternal(
     return parseAccessToken(accessToken);
   }, [accessToken]);
 
+  const now = useDebouncedNow(1000 * 60);
   const accessTokenIsLikelyValid = useMemo(() => {
     if (!parsedAccessToken || !parsedAccessToken.exp) {
       return false;
     }
-    return parsedAccessToken.exp > Date.now() / 1000;
-  }, [parsedAccessToken]);
+    return parsedAccessToken.exp > now / 1000;
+  }, [parsedAccessToken, now]);
+
+  if (requireLogin && !accessTokenIsLikelyValid) {
+    return (window.location.href = `https://${vaultDomain}/login`);
+  }
 
   useEffect(() => {
     if (!requireLogin || accessTokenIsLikelyValid) {
