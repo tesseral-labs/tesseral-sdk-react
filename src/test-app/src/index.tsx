@@ -7,7 +7,7 @@ import {
     useUser,
     useLogout,
     useMaybeOrganization, useMaybeUser
-} from "@tesseral/tesseral-react";
+} from "../../index";
 
 function App() {
   const organization = useOrganization();
