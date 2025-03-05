@@ -27,10 +27,6 @@ export function useAccessTokenInternal(
     return parsedAccessToken.exp > now / 1000;
   }, [parsedAccessToken, now]);
 
-  if (requireLogin && !accessTokenIsLikelyValid) {
-    return (window.location.href = `https://${vaultDomain}/login`);
-  }
-
   useEffect(() => {
     if (!requireLogin || accessTokenIsLikelyValid) {
       return;
@@ -42,7 +38,11 @@ export function useAccessTokenInternal(
         setAccessToken(accessToken!);
       } catch (e) {
         if (e instanceof TesseralError && e.statusCode === 401) {
-          window.location.href = `https://${vaultDomain}/login`;
+          if (requireLogin) {
+            window.location.href = `https://${vaultDomain}/login`;
+          } else {
+            return; // we're ok with not having a user on hand
+          }
         }
 
         throw e;

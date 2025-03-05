@@ -11,7 +11,7 @@ import { useFrontendApiClient } from "./use-frontend-api-client";
 
 interface TesseralProviderProps {
   publishableKey: string;
-  requireLogin: boolean;
+  requireLogin?: boolean;
   configApiHostname: string;
   children?: React.ReactNode;
 }
@@ -70,6 +70,13 @@ function TesseralProviderInner({
     parsedAccessToken,
     frontendApiClient,
   ]);
+
+  if (requireLogin && !accessToken) {
+    // We're waiting to hear back on the results of the access token;
+    // useAccessTokenInternal will handle doing the redirect to the vault if the
+    // refresh fails.
+    return null;
+  }
 
   return (
     <TesseralContext.Provider value={contextValue}>

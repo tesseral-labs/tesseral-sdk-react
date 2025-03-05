@@ -33169,9 +33169,6 @@
       }
       return parsedAccessToken.exp > now / 1e3;
     }, [parsedAccessToken, now]);
-    if (requireLogin && !accessTokenIsLikelyValid) {
-      return window.location.href = `https://${vaultDomain}/login`;
-    }
     (0, import_react7.useEffect)(() => {
       if (!requireLogin || accessTokenIsLikelyValid) {
         return;
@@ -33182,7 +33179,11 @@
           setAccessToken(accessToken2);
         } catch (e) {
           if (e instanceof import_tesseral_vanilla_clientside2.TesseralError && e.statusCode === 401) {
-            window.location.href = `https://${vaultDomain}/login`;
+            if (requireLogin) {
+              window.location.href = `https://${vaultDomain}/login`;
+            } else {
+              return;
+            }
           }
           throw e;
         }
@@ -33248,6 +33249,9 @@
       parsedAccessToken,
       frontendApiClient
     ]);
+    if (requireLogin && !accessToken) {
+      return null;
+    }
     return /* @__PURE__ */ import_react8.default.createElement(TesseralContext.Provider, { value: contextValue }, children);
   }
 
