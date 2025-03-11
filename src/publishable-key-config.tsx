@@ -1,9 +1,9 @@
-import React, { createContext, useContext } from "react";
-import { useFetch } from "./use-fetch";
+import React, {createContext, useContext, useEffect, useState} from "react";
 
 interface PublishableKeyConfig {
   projectId: string;
   vaultDomain: string;
+  trustedDomains: string[];
 }
 
 const PublishableKeyConfigContext = createContext<
@@ -21,15 +21,51 @@ export function PublishableKeyConfigProvider({
   configApiHostname,
   children,
 }: PublishableKeyConfigProviderProps) {
-  const { data } = useFetch<PublishableKeyConfig>(
-    `https://${configApiHostname}/v1/config/${publishableKey}`,
-  );
-  if (!data) {
+  const [publishableKeyConfig, setPublishableKeyConfig] = useState<PublishableKeyConfig | undefined>();
+  const [validatedPublishableKeyConfig, setValidatedPublishableKeyConfig] = useState<PublishableKeyConfig | undefined>();
+  const [error, setError] = useState<any>();
+
+  useEffect(() => {
+    (async() => {
+      try {
+        const response = await fetch(`https://${configApiHostname}/v1/config/${publishableKey}`);
+        if (response.status === 400 || response.status === 404) {
+          throw new Error(`Tesseral Publishable Key ${publishableKey} not found. Go to https://console.tesseral.com/project-settings/publishable-keys to see your list of Publishable Keys, and then update your <TesseralProvider publishableKey=\{...\} /> call to use one of those keys.`)
+        }
+        if (!response.ok) {
+          throw new Error(`Failed to fetch Tesseral Publishable Key ${publishableKey}`);
+        }
+
+        const config = await response.json();
+        setPublishableKeyConfig(config);
+      } catch (e) {
+        setError(e);
+      }
+    })()
+  }, [publishableKey, configApiHostname]);
+
+  useEffect(() => {
+    if (!publishableKeyConfig) {
+      return;
+    }
+
+    if (!publishableKeyConfig.trustedDomains.includes(location.host)) {
+      setError(new Error(`Tesseral Project ${publishableKeyConfig.projectId} is not configured to be served from ${location.host}. Only the following domains are allowed:\n\n${publishableKeyConfig.trustedDomains.join('\n')}\n\nGo to https://console.tesseral.com/project-settings and add ${location.host} to your list of trusted domains.`));
+    }
+
+    setValidatedPublishableKeyConfig(publishableKeyConfig);
+  }, [location.host, publishableKeyConfig]);
+
+  if (error) {
+    throw error;
+  }
+
+  if (!validatedPublishableKeyConfig) {
     return null;
   }
 
   return (
-    <PublishableKeyConfigContext.Provider value={data}>
+    <PublishableKeyConfigContext.Provider value={validatedPublishableKeyConfig}>
       {children}
     </PublishableKeyConfigContext.Provider>
   );
