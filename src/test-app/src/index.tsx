@@ -1,12 +1,13 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import {
-    TesseralProvider,
-    useAccessToken,
-    useOrganization,
-    useUser,
-    useLogout,
-    useMaybeOrganization, useMaybeUser
+  TesseralProvider,
+  useAccessToken,
+  useOrganization,
+  useUser,
+  useLogout,
+  useMaybeOrganization,
+  useMaybeUser,
 } from "../../index";
 
 function App() {
