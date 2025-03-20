@@ -1,13 +1,13 @@
-import { useProjectId, useVaultDomain } from "./publishable-key-config";
+import { useCallback } from "react";
+
+import { useProjectId } from "./publishable-key-config";
 import { useFrontendApiClient } from "./use-frontend-api-client";
 import { useLocalStorage } from "./use-localstorage";
-import { useCallback } from "react";
 
 export function useLogout(): () => void {
   const projectId = useProjectId();
-  const vaultDomain = useVaultDomain();
   const frontendApiClient = useFrontendApiClient();
-  const [_, setAccessToken] = useLocalStorage(
+  const [, setAccessToken] = useLocalStorage(
     `tesseral_${projectId}_access_token`,
   );
 
@@ -18,5 +18,5 @@ export function useLogout(): () => void {
     }
 
     logout();
-  }, [setAccessToken, vaultDomain]);
+  }, [frontendApiClient, setAccessToken]);
 }

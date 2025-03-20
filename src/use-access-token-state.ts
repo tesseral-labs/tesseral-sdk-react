@@ -1,5 +1,4 @@
-import { useProjectId, useVaultDomain } from "./publishable-key-config";
-import { useFrontendApiClient } from "./use-frontend-api-client";
+import { useProjectId } from "./publishable-key-config";
 import { useLocalStorage } from "./use-localstorage";
 
 export function useAccessTokenState(): [

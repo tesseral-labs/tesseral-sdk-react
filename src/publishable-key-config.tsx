@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 interface PublishableKeyConfig {
   projectId: string;
   vaultDomain: string;
+  supportRelayedSessions: boolean;
   trustedDomains: string[];
 }
 
@@ -26,7 +27,7 @@ export function PublishableKeyConfigProvider({
   >();
   const [validatedPublishableKeyConfig, setValidatedPublishableKeyConfig] =
     useState<PublishableKeyConfig | undefined>();
-  const [error, setError] = useState<any>();
+  const [error, setError] = useState<unknown>();
 
   useEffect(() => {
     (async () => {
@@ -36,7 +37,7 @@ export function PublishableKeyConfigProvider({
         );
         if (response.status === 400 || response.status === 404) {
           throw new Error(
-            `Tesseral Publishable Key ${publishableKey} not found. Go to https://console.tesseral.com/project-settings/publishable-keys to see your list of Publishable Keys, and then update your <TesseralProvider publishableKey=\{...\} /> call to use one of those keys.`,
+            `Tesseral Publishable Key ${publishableKey} not found. Go to https://console.tesseral.com/project-settings/publishable-keys to see your list of Publishable Keys, and then update your <TesseralProvider publishableKey={...} /> call to use one of those keys.`,
           );
         }
         if (!response.ok) {
@@ -67,7 +68,7 @@ export function PublishableKeyConfigProvider({
     }
 
     setValidatedPublishableKeyConfig(publishableKeyConfig);
-  }, [location.host, publishableKeyConfig]);
+  }, [publishableKeyConfig]);
 
   if (error) {
     throw error;
@@ -102,4 +103,14 @@ export function useVaultDomain(): string {
     );
   }
   return config.vaultDomain;
+}
+
+export function useSupportRelayedSessions(): boolean {
+  const config = useContext(PublishableKeyConfigContext);
+  if (!config) {
+    throw new Error(
+      "useSupportRelayedSessions() must be called from a child component of PublishableKeyConfigContext",
+    );
+  }
+  return config.supportRelayedSessions;
 }

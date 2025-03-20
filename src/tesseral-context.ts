@@ -1,10 +1,10 @@
-import { createContext, useContext } from "react";
+import { TesseralClient } from "@tesseral/tesseral-vanilla-clientside";
 import {
   AccessTokenOrganization,
   AccessTokenSession,
   AccessTokenUser,
 } from "@tesseral/tesseral-vanilla-clientside/api";
-import { TesseralClient } from "@tesseral/tesseral-vanilla-clientside";
+import { createContext } from "react";
 
 export interface TesseralContextValue {
   projectId: string;

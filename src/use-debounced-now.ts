@@ -5,6 +5,6 @@ export function useDebouncedNow(updatePeriodMillis: number): number {
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), updatePeriodMillis);
     return () => clearInterval(interval);
-  }, []);
+  }, [updatePeriodMillis]);
   return now;
 }
