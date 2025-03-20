@@ -1,12 +1,15 @@
 import React, { useMemo } from "react";
+
+import { parseAccessToken } from "./parse-access-token";
 import {
   PublishableKeyConfigProvider,
+  useDevMode,
   useProjectId,
   useVaultDomain,
 } from "./publishable-key-config";
 import { TesseralContext } from "./tesseral-context";
-import { useAccessTokenInternal } from "./use-access-token-internal";
-import { parseAccessToken } from "./parse-access-token";
+import { useAccessTokenDefaultMode } from "./use-access-token-default-mode";
+import { useAccessTokenDevMode } from "./use-access-token-dev-mode";
 import { useFrontendApiClient } from "./use-frontend-api-client";
 
 interface TesseralProviderProps {
@@ -43,8 +46,20 @@ function TesseralProviderInner({
 }) {
   const projectId = useProjectId();
   const vaultDomain = useVaultDomain();
-  const accessToken = useAccessTokenInternal(requireLogin);
   const frontendApiClient = useFrontendApiClient();
+
+  const devMode = useDevMode();
+
+  const devModeAccessToken = useAccessTokenDevMode({
+    requireLogin,
+    enabled: devMode,
+  });
+  const defaultModeAccessToken = useAccessTokenDefaultMode({
+    requireLogin,
+    enabled: !devMode,
+  });
+
+  const accessToken = devMode ? devModeAccessToken : defaultModeAccessToken;
 
   const parsedAccessToken = useMemo(() => {
     if (!accessToken) {
@@ -72,9 +87,9 @@ function TesseralProviderInner({
   ]);
 
   if (requireLogin && !accessToken) {
-    // We're waiting to hear back on the results of the access token;
-    // useAccessTokenInternal will handle doing the redirect to the vault if the
-    // refresh fails.
+    // We're waiting to hear back on the results of the access token; the
+    // enabled access token hook will handle doing background requests or
+    // redirects as required.
     return null;
   }
 

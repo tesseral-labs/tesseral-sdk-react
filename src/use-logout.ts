@@ -1,22 +1,27 @@
 import { useCallback } from "react";
 
-import { useProjectId } from "./publishable-key-config";
+import { useAccessTokenLocalStorage } from "./use-access-token-localstorage";
 import { useFrontendApiClient } from "./use-frontend-api-client";
-import { useLocalStorage } from "./use-localstorage";
+import { useRefreshTokenLocalStorage } from "./use-refresh-token-localstorage";
 
 export function useLogout(): () => void {
-  const projectId = useProjectId();
   const frontendApiClient = useFrontendApiClient();
-  const [, setAccessToken] = useLocalStorage(
-    `tesseral_${projectId}_access_token`,
-  );
+  const [, setRefreshTokenLocalStorage] = useRefreshTokenLocalStorage();
+  const [, setAccessTokenLocalStorage] = useAccessTokenLocalStorage();
 
   return useCallback(() => {
     async function logout() {
       await frontendApiClient.logout({});
-      setAccessToken(null);
+
+      // clear out any dev mode localstorage state
+      setRefreshTokenLocalStorage(null);
+      setAccessTokenLocalStorage(null);
     }
 
-    logout();
-  }, [frontendApiClient, setAccessToken]);
+    void logout();
+  }, [
+    frontendApiClient,
+    setAccessTokenLocalStorage,
+    setRefreshTokenLocalStorage,
+  ]);
 }

@@ -28,7 +28,7 @@ function App() {
 const root = createRoot(document.getElementById("react-root") as HTMLElement);
 root.render(
   <TesseralProvider
-    publishableKey="publishable_key_2qneh27d2po1yp5mrfpajxa57"
+    publishableKey="publishable_key_1sd75fpowmox764gfwrrxeehn"
     configApiHostname="config.tesseral.example.com"
     requireLogin={true}
   >

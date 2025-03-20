@@ -3,7 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 interface PublishableKeyConfig {
   projectId: string;
   vaultDomain: string;
-  supportRelayedSessions: boolean;
+  devMode: boolean;
   trustedDomains: string[];
 }
 
@@ -105,12 +105,12 @@ export function useVaultDomain(): string {
   return config.vaultDomain;
 }
 
-export function useSupportRelayedSessions(): boolean {
+export function useDevMode(): boolean {
   const config = useContext(PublishableKeyConfigContext);
   if (!config) {
     throw new Error(
-      "useSupportRelayedSessions() must be called from a child component of PublishableKeyConfigContext",
+      "useDevMode() must be called from a child component of PublishableKeyConfigContext",
     );
   }
-  return config.supportRelayedSessions;
+  return config.devMode;
 }

@@ -1,11 +1,12 @@
+import { TesseralClient } from "@tesseral/tesseral-vanilla-clientside";
 import {
   AccessTokenOrganization,
   AccessTokenSession,
   AccessTokenUser,
 } from "@tesseral/tesseral-vanilla-clientside/api";
 import { useContext } from "react";
+
 import { TesseralContext } from "./tesseral-context";
-import { TesseralClient } from "@tesseral/tesseral-vanilla-clientside";
 
 export interface UseTesseralResult {
   vaultDomain: string;
@@ -73,16 +74,6 @@ export function useUser(): AccessTokenUser {
     );
   }
   return user;
-}
-
-export function useSignupUrl(): string {
-  const { vaultDomain } = useTesseral();
-  return `https://${vaultDomain}/signup`;
-}
-
-export function useLoginUrl(): string {
-  const { vaultDomain } = useTesseral();
-  return `https://${vaultDomain}/login`;
 }
 
 export function useOrganizationSettingsUrl(): string {

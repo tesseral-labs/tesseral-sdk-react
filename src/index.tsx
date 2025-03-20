@@ -7,8 +7,6 @@ export {
   useAccessToken,
   useOrganization,
   useUser,
-  useSignupUrl,
-  useLoginUrl,
   useOrganizationSettingsUrl,
   useUserSettingsUrl,
 } from "./hooks";
