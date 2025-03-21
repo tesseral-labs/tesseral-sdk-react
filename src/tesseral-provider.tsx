@@ -1,70 +1,50 @@
-import React, { useMemo } from "react";
+import React, { useContext, useMemo } from "react";
 
+import { DefaultModeAccessTokenProvider } from "./default-mode-access-token-provider";
+import { DevModeAccessTokenProvider } from "./dev-mode-access-token-provider";
+import { InternalAccessTokenContext } from "./internal-access-token-context";
 import { parseAccessToken } from "./parse-access-token";
-import {
-  PublishableKeyConfigProvider,
-  useDevMode,
-  useProjectId,
-  useVaultDomain,
-} from "./publishable-key-config";
+import { PublishableKeyConfigProvider, useDevMode, useProjectId, useVaultDomain } from "./publishable-key-config";
 import { TesseralContext } from "./tesseral-context";
-import { useAccessTokenDefaultMode } from "./use-access-token-default-mode";
-import { useAccessTokenDevMode } from "./use-access-token-dev-mode";
 import { useFrontendApiClient } from "./use-frontend-api-client";
 
 interface TesseralProviderProps {
   publishableKey: string;
-  requireLogin?: boolean;
   configApiHostname: string;
   children?: React.ReactNode;
 }
 
 export function TesseralProvider({
   publishableKey,
-  requireLogin = true,
   configApiHostname = "config.tesseral.com",
   children,
 }: TesseralProviderProps) {
   return (
-    <PublishableKeyConfigProvider
-      publishableKey={publishableKey}
-      configApiHostname={configApiHostname}
-    >
-      <TesseralProviderInner requireLogin={requireLogin}>
-        {children}
-      </TesseralProviderInner>
+    <PublishableKeyConfigProvider publishableKey={publishableKey} configApiHostname={configApiHostname}>
+      <TesseralProviderWithConfig>
+        <TesseralProviderWithAccessToken>{children}</TesseralProviderWithAccessToken>
+      </TesseralProviderWithConfig>
     </PublishableKeyConfigProvider>
   );
 }
 
-function TesseralProviderInner({
-  requireLogin,
-  children,
-}: {
-  requireLogin: boolean;
-  children?: React.ReactNode;
-}) {
+function TesseralProviderWithConfig({ children }: { children?: React.ReactNode }) {
+  const devMode = useDevMode();
+
+  if (devMode) {
+    return <DevModeAccessTokenProvider>{children}</DevModeAccessTokenProvider>;
+  } else {
+    return <DefaultModeAccessTokenProvider>{children}</DefaultModeAccessTokenProvider>;
+  }
+}
+
+function TesseralProviderWithAccessToken({ children }: { children?: React.ReactNode }) {
   const projectId = useProjectId();
   const vaultDomain = useVaultDomain();
   const frontendApiClient = useFrontendApiClient();
 
-  const devMode = useDevMode();
-
-  const devModeAccessToken = useAccessTokenDevMode({
-    requireLogin,
-    enabled: devMode,
-  });
-  const defaultModeAccessToken = useAccessTokenDefaultMode({
-    requireLogin,
-    enabled: !devMode,
-  });
-
-  const accessToken = devMode ? devModeAccessToken : defaultModeAccessToken;
-
+  const accessToken = useContext(InternalAccessTokenContext);
   const parsedAccessToken = useMemo(() => {
-    if (!accessToken) {
-      return undefined;
-    }
     return parseAccessToken(accessToken);
   }, [accessToken]);
 
@@ -73,29 +53,12 @@ function TesseralProviderInner({
       projectId,
       vaultDomain,
       accessToken,
-      organization: parsedAccessToken?.organization,
-      user: parsedAccessToken?.user,
-      session: parsedAccessToken?.session,
+      organization: parsedAccessToken.organization!,
+      user: parsedAccessToken.user!,
+      session: parsedAccessToken.session!,
       frontendApiClient,
     };
-  }, [
-    projectId,
-    vaultDomain,
-    accessToken,
-    parsedAccessToken,
-    frontendApiClient,
-  ]);
+  }, [projectId, vaultDomain, accessToken, parsedAccessToken, frontendApiClient]);
 
-  if (requireLogin && !accessToken) {
-    // We're waiting to hear back on the results of the access token; the
-    // enabled access token hook will handle doing background requests or
-    // redirects as required.
-    return null;
-  }
-
-  return (
-    <TesseralContext.Provider value={contextValue}>
-      {children}
-    </TesseralContext.Provider>
-  );
+  return <TesseralContext.Provider value={contextValue}>{children}</TesseralContext.Provider>;
 }

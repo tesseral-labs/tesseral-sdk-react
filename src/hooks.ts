@@ -11,18 +11,16 @@ import { TesseralContext } from "./tesseral-context";
 export interface UseTesseralResult {
   vaultDomain: string;
   frontendApiClient: TesseralClient;
-  accessToken?: string;
-  organization?: AccessTokenOrganization;
-  user?: AccessTokenUser;
-  session?: AccessTokenSession;
+  accessToken: string;
+  organization: AccessTokenOrganization;
+  user: AccessTokenUser;
+  session: AccessTokenSession;
 }
 
 export function useTesseral(): UseTesseralResult {
   const context = useContext(TesseralContext);
   if (!context) {
-    throw new Error(
-      "useTesseral() must be called from a child component of TesseralContext",
-    );
+    throw new Error("useTesseral() must be called from a child component of TesseralContext");
   }
   return {
     vaultDomain: context.vaultDomain,
@@ -34,44 +32,26 @@ export function useTesseral(): UseTesseralResult {
   };
 }
 
-export function useMaybeAccessToken(): string | undefined {
-  return useTesseral().accessToken;
-}
-
-export function useMaybeOrganization(): AccessTokenOrganization | undefined {
-  return useTesseral().organization;
-}
-
-export function useMaybeUser(): AccessTokenUser | undefined {
-  return useTesseral().user;
-}
-
 export function useAccessToken(): string {
-  const accessToken = useMaybeAccessToken();
+  const accessToken = useContext(TesseralContext)?.accessToken;
   if (!accessToken) {
-    throw new Error(
-      `useAccessToken() must be called from a child component of TesseralContext with "requireLogin" set to true`,
-    );
+    throw new Error(`useAccessToken() must be called from a child component of TesseralContext`);
   }
   return accessToken;
 }
 
 export function useOrganization(): AccessTokenOrganization {
-  const organization = useMaybeOrganization();
+  const organization = useContext(TesseralContext)?.organization;
   if (!organization) {
-    throw new Error(
-      `useOrganization() must be called from a child component of TesseralContext with "requireLogin" set to true`,
-    );
+    throw new Error(`useOrganization() must be called from a child component of TesseralContext`);
   }
   return organization;
 }
 
 export function useUser(): AccessTokenUser {
-  const user = useMaybeUser();
+  const user = useContext(TesseralContext)?.user;
   if (!user) {
-    throw new Error(
-      `useUser() must be called from a child component of TesseralContext with "requireLogin" set to true`,
-    );
+    throw new Error(`useUser() must be called from a child component of TesseralContext`);
   }
   return user;
 }
