@@ -7,9 +7,7 @@ interface PublishableKeyConfig {
   trustedDomains: string[];
 }
 
-const PublishableKeyConfigContext = createContext<
-  PublishableKeyConfig | undefined
->(undefined);
+const PublishableKeyConfigContext = createContext<PublishableKeyConfig | undefined>(undefined);
 
 export interface PublishableKeyConfigProviderProps {
   publishableKey: string;
@@ -22,28 +20,23 @@ export function PublishableKeyConfigProvider({
   configApiHostname,
   children,
 }: PublishableKeyConfigProviderProps) {
-  const [publishableKeyConfig, setPublishableKeyConfig] = useState<
+  const [publishableKeyConfig, setPublishableKeyConfig] = useState<PublishableKeyConfig | undefined>();
+  const [validatedPublishableKeyConfig, setValidatedPublishableKeyConfig] = useState<
     PublishableKeyConfig | undefined
   >();
-  const [validatedPublishableKeyConfig, setValidatedPublishableKeyConfig] =
-    useState<PublishableKeyConfig | undefined>();
   const [error, setError] = useState<unknown>();
 
   useEffect(() => {
     (async () => {
       try {
-        const response = await fetch(
-          `https://${configApiHostname}/v1/config/${publishableKey}`,
-        );
+        const response = await fetch(`https://${configApiHostname}/v1/config/${publishableKey}`);
         if (response.status === 400 || response.status === 404) {
           throw new Error(
             `Tesseral Publishable Key ${publishableKey} not found. Go to https://console.tesseral.com/project-settings/publishable-keys to see your list of Publishable Keys, and then update your <TesseralProvider publishableKey={...} /> call to use one of those keys.`,
           );
         }
         if (!response.ok) {
-          throw new Error(
-            `Failed to fetch Tesseral Publishable Key ${publishableKey}`,
-          );
+          throw new Error(`Failed to fetch Tesseral Publishable Key ${publishableKey}`);
         }
 
         const config = await response.json();
@@ -88,9 +81,7 @@ export function PublishableKeyConfigProvider({
 export function useProjectId(): string {
   const config = useContext(PublishableKeyConfigContext);
   if (!config) {
-    throw new Error(
-      "useProjectId() must be called from a child component of PublishableKeyConfigContext",
-    );
+    throw new Error("useProjectId() must be called from a child component of PublishableKeyConfigContext");
   }
   return config.projectId;
 }
@@ -98,9 +89,7 @@ export function useProjectId(): string {
 export function useVaultDomain(): string {
   const config = useContext(PublishableKeyConfigContext);
   if (!config) {
-    throw new Error(
-      "useVaultDomain() must be called from a child component of PublishableKeyConfigContext",
-    );
+    throw new Error("useVaultDomain() must be called from a child component of PublishableKeyConfigContext");
   }
   return config.vaultDomain;
 }
@@ -108,9 +97,7 @@ export function useVaultDomain(): string {
 export function useDevMode(): boolean {
   const config = useContext(PublishableKeyConfigContext);
   if (!config) {
-    throw new Error(
-      "useDevMode() must be called from a child component of PublishableKeyConfigContext",
-    );
+    throw new Error("useDevMode() must be called from a child component of PublishableKeyConfigContext");
   }
   return config.devMode;
 }

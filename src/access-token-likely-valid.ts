@@ -12,16 +12,12 @@ export function useAccessTokenLikelyValid(accessToken: string): boolean {
       return false;
     }
     const parsedAccessToken = parseAccessToken(accessToken);
-    return (
-      parsedAccessToken.exp! * 1000 > now - ACCESS_TOKEN_EXPIRY_BUFFER_MILLIS
-    );
+    return parsedAccessToken.exp! * 1000 > now - ACCESS_TOKEN_EXPIRY_BUFFER_MILLIS;
   }, [accessToken, now]);
 }
 
 function parseAccessToken(accessToken: string): AccessTokenClaims {
   const claimsPart = accessToken.split(".")[1];
-  const decodedClaims = new TextDecoder().decode(
-    Uint8Array.from(atob(claimsPart), (c) => c.charCodeAt(0)),
-  );
+  const decodedClaims = new TextDecoder().decode(Uint8Array.from(atob(claimsPart), (c) => c.charCodeAt(0)));
   return JSON.parse(decodedClaims) as AccessTokenClaims;
 }

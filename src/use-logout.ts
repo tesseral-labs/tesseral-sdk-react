@@ -19,9 +19,5 @@ export function useLogout(): () => void {
     }
 
     void logout();
-  }, [
-    frontendApiClient,
-    setAccessTokenLocalStorage,
-    setRefreshTokenLocalStorage,
-  ]);
+  }, [frontendApiClient, setAccessTokenLocalStorage, setRefreshTokenLocalStorage]);
 }
