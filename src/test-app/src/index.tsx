@@ -21,7 +21,7 @@ function App() {
   const logout = useLogout();
   const { frontendApiClient } = useTesseral();
 
-  const [data, setData] = useState<any>();
+  const [data, setData] = useState<unknown>();
   useEffect(() => {
     (async () => {
       setData(await frontendApiClient.me.whoami({}));

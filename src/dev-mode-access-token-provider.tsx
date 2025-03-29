@@ -10,7 +10,6 @@ import { sha256 } from "./sha256";
 import { useAccessTokenLocalStorage } from "./use-access-token-localstorage";
 import { useFrontendApiClientInternal } from "./use-frontend-api-client-internal";
 import { useRefreshTokenLocalStorage } from "./use-refresh-token-localstorage";
-import { useRelayedSessionState } from "./use-relayed-session-state";
 
 export function DevModeAccessTokenProvider({ children }: { children?: React.ReactNode }) {
   const accessToken = useAccessToken();
@@ -59,7 +58,6 @@ function useAccessToken(): string | undefined {
   const vaultDomain = useVaultDomain();
   const frontendApiClient = useFrontendApiClientInternal();
 
-  const [relayedSessionState, setRelayedSessionState] = useRelayedSessionState();
   const [refreshToken, setRefreshToken] = useRefreshTokenLocalStorage();
   const [accessToken, setAccessToken] = useAccessTokenLocalStorage();
 
