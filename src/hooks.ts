@@ -4,9 +4,13 @@ import {
   AccessTokenSession,
   AccessTokenUser,
 } from "@tesseral/tesseral-vanilla-clientside/api";
-import { useContext } from "react";
+import { useCallback, useContext } from "react";
 
+import { deleteCookie } from "./cookie";
+import { useProjectId } from "./publishable-key-config";
 import { TesseralContext } from "./tesseral-context";
+import { useAccessTokenLocalStorage } from "./use-access-token-localstorage";
+import { useRefreshTokenLocalStorage } from "./use-refresh-token-localstorage";
 
 export interface UseTesseralResult {
   vaultDomain: string;
@@ -56,12 +60,46 @@ export function useUser(): AccessTokenUser {
   return user;
 }
 
+export function useLogout(): () => void {
+  // this code may call a variable number of hooks, but we're throwing in such
+  // cases anyway
+  if (!useContext(TesseralContext)) {
+    throw new Error(`useLogout() must be called from a child component of TesseralContext`);
+  }
+
+  const { frontendApiClient } = useTesseral();
+  const [, setRefreshTokenLocalStorage] = useRefreshTokenLocalStorage();
+  const [, setAccessTokenLocalStorage] = useAccessTokenLocalStorage();
+  const projectId = useProjectId();
+
+  return useCallback(() => {
+    async function logout() {
+      // clear out any dev mode localstorage state; no-op in default mode
+      setRefreshTokenLocalStorage(null);
+      setAccessTokenLocalStorage(null);
+      deleteCookie(`tesseral_${projectId}_access_token`);
+
+      await frontendApiClient.logout({});
+    }
+
+    void logout();
+  }, [frontendApiClient, projectId, setAccessTokenLocalStorage, setRefreshTokenLocalStorage]);
+}
+
 export function useOrganizationSettingsUrl(): string {
+  if (!useContext(TesseralContext)) {
+    throw new Error(`useOrganizationSettingsUrl() must be called from a child component of TesseralContext`);
+  }
+
   const { vaultDomain } = useTesseral();
   return `https://${vaultDomain}/organization-settings`;
 }
 
 export function useUserSettingsUrl(): string {
+  if (!useContext(TesseralContext)) {
+    throw new Error(`useUserSettingsUrl() must be called from a child component of TesseralContext`);
+  }
+
   const { vaultDomain } = useTesseral();
   return `https://${vaultDomain}/user-settings`;
 }

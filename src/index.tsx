@@ -6,5 +6,5 @@ export {
   useUser,
   useOrganizationSettingsUrl,
   useUserSettingsUrl,
+  useLogout,
 } from "./hooks";
-export { useLogout } from "./use-logout";

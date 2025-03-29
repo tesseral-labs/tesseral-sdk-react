@@ -1,29 +1,63 @@
-import { TesseralError } from "@tesseral/tesseral-vanilla-clientside";
-import React, { useEffect, useRef, useState } from "react";
+import { TesseralClient, TesseralError } from "@tesseral/tesseral-vanilla-clientside";
+import { fetcher } from "@tesseral/tesseral-vanilla-clientside/core";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { useAccessTokenLikelyValid } from "./access-token-likely-valid";
 import { setCookie } from "./cookie";
-import { InternalAccessTokenContext } from "./internal-access-token-context";
+import { InternalAccessTokenContext, InternalAccessTokenContextValue } from "./internal-access-token-context";
 import { useProjectId, useVaultDomain } from "./publishable-key-config";
 import { sha256 } from "./sha256";
 import { useAccessTokenLocalStorage } from "./use-access-token-localstorage";
-import { useFrontendApiClient } from "./use-frontend-api-client";
+import { useFrontendApiClientInternal } from "./use-frontend-api-client-internal";
 import { useRefreshTokenLocalStorage } from "./use-refresh-token-localstorage";
 import { useRelayedSessionState } from "./use-relayed-session-state";
 
 export function DevModeAccessTokenProvider({ children }: { children?: React.ReactNode }) {
   const accessToken = useAccessToken();
-  if (!accessToken) {
+  const frontendApiClient = useDevModeFrontendApiClient(accessToken ?? "");
+
+  const contextValue = useMemo(() => {
+    return {
+      accessToken,
+      frontendApiClient,
+    };
+  }, [accessToken, frontendApiClient]);
+
+  if (!contextValue.accessToken) {
     return null;
   }
 
-  return <InternalAccessTokenContext value={accessToken}>{children}</InternalAccessTokenContext>;
+  return (
+    // without `as`, typescript thinks contextValue.accessToken may be undefined
+    <InternalAccessTokenContext value={contextValue as InternalAccessTokenContextValue}>
+      {children}
+    </InternalAccessTokenContext>
+  );
+}
+
+function useDevModeFrontendApiClient(accessToken: string) {
+  const vaultDomain = useVaultDomain();
+
+  return useMemo(() => {
+    return new TesseralClient({
+      environment: `https://${vaultDomain}`,
+      fetcher: (options) => {
+        return fetcher({
+          ...options,
+          headers: {
+            ...options.headers,
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+      },
+    });
+  }, [accessToken, vaultDomain]);
 }
 
 function useAccessToken(): string | undefined {
   const projectId = useProjectId();
   const vaultDomain = useVaultDomain();
-  const frontendApiClient = useFrontendApiClient();
+  const frontendApiClient = useFrontendApiClientInternal();
 
   const [relayedSessionState, setRelayedSessionState] = useRelayedSessionState();
   const [refreshToken, setRefreshToken] = useRefreshTokenLocalStorage();
@@ -162,6 +196,8 @@ async function handleRelayedSession({
   if (exchangeStateSHA256 !== savedState) {
     throw new Error("Relayed session state does not match expected value");
   }
+
+  localStorage.removeItem(`tesseral_${projectId}_relayed_session_state`);
 
   return { refreshToken, accessToken };
 }

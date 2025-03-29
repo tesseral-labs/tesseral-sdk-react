@@ -1,3 +1,9 @@
+import { TesseralClient } from "@tesseral/tesseral-vanilla-clientside";
 import { createContext } from "react";
 
-export const InternalAccessTokenContext = createContext<string>("");
+export interface InternalAccessTokenContextValue {
+  accessToken: string;
+  frontendApiClient: TesseralClient;
+}
+
+export const InternalAccessTokenContext = createContext<InternalAccessTokenContextValue | undefined>(undefined);

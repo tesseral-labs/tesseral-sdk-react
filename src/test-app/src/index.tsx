@@ -1,4 +1,4 @@
-import React, { StrictMode, useEffect } from "react";
+import React, { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 import {
@@ -7,6 +7,7 @@ import {
   useLogout,
   useOrganization,
   useOrganizationSettingsUrl,
+  useTesseral,
   useUser,
   useUserSettingsUrl,
 } from "../../index";
@@ -18,6 +19,14 @@ function App() {
   const userSettingsUrl = useUserSettingsUrl();
   const organizationSettingsUrl = useOrganizationSettingsUrl();
   const logout = useLogout();
+  const { frontendApiClient } = useTesseral();
+
+  const [data, setData] = useState<any>();
+  useEffect(() => {
+    (async () => {
+      setData(await frontendApiClient.me.whoami({}));
+    })();
+  }, [frontendApiClient.me]);
 
   return (
     <div>
@@ -27,6 +36,8 @@ function App() {
       <a href={organizationSettingsUrl}>Organization Settings</a>
       <pre>{accessToken}</pre>
       <button onClick={() => logout()}>logout</button>
+
+      <pre>{JSON.stringify(data, null, 2)}</pre>
     </div>
   );
 }

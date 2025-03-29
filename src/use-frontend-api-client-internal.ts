@@ -3,7 +3,7 @@ import { useMemo } from "react";
 
 import { useVaultDomain } from "./publishable-key-config";
 
-export function useFrontendApiClient() {
+export function useFrontendApiClientInternal() {
   const vaultDomain = useVaultDomain();
 
   return useMemo(() => {
