@@ -8,3 +8,7 @@ export function getCookie(key: string): string | undefined {
 export function setCookie(key: string, value: string): void {
   document.cookie = `${key}=${value}`;
 }
+
+export function clearCookie(key: string): void {
+  document.cookie = `${key}=; expires=Thu, 01 Jan 1970 00:00:00 UTC;`;
+}

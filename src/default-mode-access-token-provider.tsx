@@ -5,7 +5,7 @@ import { useAccessTokenLikelyValid } from "./access-token-likely-valid";
 import { getCookie } from "./cookie";
 import { InternalAccessTokenContext } from "./internal-access-token-context";
 import { useProjectId, useVaultDomain } from "./publishable-key-config";
-import { useFrontendApiClient } from "./use-frontend-api-client";
+import { useFrontendApiClientInternal } from "./use-frontend-api-client-internal";
 
 export function DefaultModeAccessTokenProvider({ children }: { children?: React.ReactNode }) {
   const accessToken = useAccessToken();
@@ -19,7 +19,7 @@ export function DefaultModeAccessTokenProvider({ children }: { children?: React.
 function useAccessToken(): string | undefined {
   const projectId = useProjectId();
   const vaultDomain = useVaultDomain();
-  const frontendApiClient = useFrontendApiClient();
+  const frontendApiClient = useFrontendApiClientInternal();
 
   const [error, setError] = useState<unknown>();
   const accessToken = getCookie(`tesseral_${projectId}_access_token`);
