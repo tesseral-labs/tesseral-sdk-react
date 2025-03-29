@@ -1,4 +1,4 @@
-import React from "react";
+import React, { StrictMode, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 
 import {
@@ -34,7 +34,7 @@ function App() {
 const root = createRoot(document.getElementById("react-root") as HTMLElement);
 root.render(
   <TesseralProvider
-    publishableKey="publishable_key_1sd75fpowmox764gfwrrxeehn"
+    publishableKey="publishable_key_6kdiksy1lnq9hi1bh4s83nu3c"
     configApiHostname="config.tesseral.example.com"
   >
     <App />
