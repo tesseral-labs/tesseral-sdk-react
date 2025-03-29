@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { TesseralError } from "@tesseral/tesseral-vanilla-clientside";
+import React, { useEffect, useRef, useState } from "react";
 
 import { useAccessTokenLikelyValid } from "./access-token-likely-valid";
 import { setCookie } from "./cookie";
@@ -34,7 +35,7 @@ function useAccessToken(): string | undefined {
   // We exit this mode if there is no relayed session token, or when we're done
   // exchanging the relayed session token.
   const [processingRelayedSession, setProcessingRelayedSession] = useState(true);
-  const [relayedSessionToken, setRelayedSessionToken] = useState<string | undefined>();
+  const strictModeDedupeRelayedSession = useRef(false);
 
   const accessTokenLikelyValid = useAccessTokenLikelyValid(accessToken ?? "");
 
@@ -42,50 +43,32 @@ function useAccessToken(): string | undefined {
 
   // look for a relayed session token; this effect only runs once
   useEffect(() => {
-    const prefix = `#__tesseral_${projectId}_relayed_session_token=`;
-    if (window.location.hash.startsWith(prefix)) {
-      setRelayedSessionToken(window.location.hash.substring(prefix.length));
-
-      // remove hash from window.location
-      history.replaceState(null, "", window.location.pathname + window.location.search);
-    } else {
-      setProcessingRelayedSession(false);
+    // React's StrictMode causes all useEffect callbacks to run twice. We don't
+    // want that to happen here, because want to create a Promise that does
+    // non-idempotent work. Simplest is to avoid creating multiple such
+    // Promises.
+    //
+    // So here, we use a ref to detect whether this is the first time this
+    // useAccessToken hook is trying to detect a relayed session, and aborts if
+    // it isn't.
+    if (strictModeDedupeRelayedSession.current) {
+      return;
     }
-  }, [projectId]);
+    strictModeDedupeRelayedSession.current = true;
 
-  // if we got a relayed session token, then exchange it to acquire an access
-  // token / refresh token pair
-  useEffect(() => {
     (async () => {
-      if (!relayedSessionToken) {
-        return;
-      }
-
       try {
-        const {
-          refreshToken,
-          accessToken,
-          relayedSessionState: relayedSessionStateFromExchange,
-        } = await exchangeRelayedSessionToken({
-          vaultDomain,
-          relayedSessionToken,
-        });
-
-        const exchangeStateSHA256 = await sha256(relayedSessionStateFromExchange);
-        if (exchangeStateSHA256 !== relayedSessionState) {
-          throw new Error("Relayed session state does not match expected value");
+        const result = await handleRelayedSession({ vaultDomain, projectId });
+        if (result) {
+          setRefreshToken(result.refreshToken);
+          setAccessToken(result.accessToken);
         }
-
-        setRefreshToken(refreshToken);
-        setAccessToken(accessToken);
-        setRelayedSessionState(null);
-        setRelayedSessionToken(undefined);
         setProcessingRelayedSession(false);
       } catch (e) {
         setError(e);
       }
     })();
-  }, [relayedSessionState, relayedSessionToken, setAccessToken, setRefreshToken, setRelayedSessionState, vaultDomain]);
+  }, [vaultDomain, projectId, setRefreshToken, setAccessToken]);
 
   // whenever the access token is invalid or near-expired, refresh it
   useEffect(() => {
@@ -105,11 +88,21 @@ function useAccessToken(): string | undefined {
         return; // appease typescript
       }
 
-      const { accessToken } = await frontendApiClient.refresh({
-        refreshToken,
-      });
+      try {
+        const { accessToken } = await frontendApiClient.refresh({
+          refreshToken,
+        });
 
-      setAccessToken(accessToken!);
+        setAccessToken(accessToken!);
+      } catch (e) {
+        if (e instanceof TesseralError && e.statusCode === 401) {
+          // our refresh token is no good
+          await redirectToVaultLogin({ projectId, vaultDomain });
+          return;
+        }
+
+        setError(e);
+      }
     })();
   }, [
     accessTokenLikelyValid,
@@ -136,6 +129,41 @@ function useAccessToken(): string | undefined {
   if (accessTokenLikelyValid) {
     return accessToken!;
   }
+}
+
+async function handleRelayedSession({
+  vaultDomain,
+  projectId,
+}: {
+  vaultDomain: string;
+  projectId: string;
+}): Promise<{ accessToken: string; refreshToken: string } | undefined> {
+  const prefix = `#__tesseral_${projectId}_relayed_session_token=`;
+  if (!window.location.hash.startsWith(prefix)) {
+    return;
+  }
+
+  const relayedSessionToken = window.location.hash.substring(prefix.length);
+
+  // remove hash from window.location
+  history.replaceState(null, "", window.location.pathname + window.location.search);
+
+  const {
+    refreshToken,
+    accessToken,
+    relayedSessionState: relayedSessionStateFromExchange,
+  } = await exchangeRelayedSessionToken({
+    vaultDomain,
+    relayedSessionToken,
+  });
+
+  const exchangeStateSHA256 = await sha256(relayedSessionStateFromExchange);
+  const savedState = localStorage.getItem(`tesseral_${projectId}_relayed_session_state`);
+  if (exchangeStateSHA256 !== savedState) {
+    throw new Error("Relayed session state does not match expected value");
+  }
+
+  return { refreshToken, accessToken };
 }
 
 async function exchangeRelayedSessionToken({
