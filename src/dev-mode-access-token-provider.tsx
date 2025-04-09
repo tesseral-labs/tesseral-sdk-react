@@ -1,30 +1,63 @@
-import React, { useEffect, useState } from "react";
+import { TesseralClient, TesseralError } from "@tesseral/tesseral-vanilla-clientside";
+import { fetcher } from "@tesseral/tesseral-vanilla-clientside/core";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { useAccessTokenLikelyValid } from "./access-token-likely-valid";
 import { setCookie } from "./cookie";
-import { InternalAccessTokenContext } from "./internal-access-token-context";
+import { InternalAccessTokenContext, InternalAccessTokenContextValue } from "./internal-access-token-context";
 import { useProjectId, useVaultDomain } from "./publishable-key-config";
 import { sha256 } from "./sha256";
 import { useAccessTokenLocalStorage } from "./use-access-token-localstorage";
-import { useFrontendApiClient } from "./use-frontend-api-client";
+import { useFrontendApiClientInternal } from "./use-frontend-api-client-internal";
 import { useRefreshTokenLocalStorage } from "./use-refresh-token-localstorage";
-import { useRelayedSessionState } from "./use-relayed-session-state";
 
 export function DevModeAccessTokenProvider({ children }: { children?: React.ReactNode }) {
   const accessToken = useAccessToken();
-  if (!accessToken) {
+  const frontendApiClient = useDevModeFrontendApiClient(accessToken ?? "");
+
+  const contextValue = useMemo(() => {
+    return {
+      accessToken,
+      frontendApiClient,
+    };
+  }, [accessToken, frontendApiClient]);
+
+  if (!contextValue.accessToken) {
     return null;
   }
 
-  return <InternalAccessTokenContext value={accessToken}>{children}</InternalAccessTokenContext>;
+  return (
+    // without `as`, typescript thinks contextValue.accessToken may be undefined
+    <InternalAccessTokenContext value={contextValue as InternalAccessTokenContextValue}>
+      {children}
+    </InternalAccessTokenContext>
+  );
+}
+
+function useDevModeFrontendApiClient(accessToken: string) {
+  const vaultDomain = useVaultDomain();
+
+  return useMemo(() => {
+    return new TesseralClient({
+      environment: `https://${vaultDomain}`,
+      fetcher: (options) => {
+        return fetcher({
+          ...options,
+          headers: {
+            ...options.headers,
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+      },
+    });
+  }, [accessToken, vaultDomain]);
 }
 
 function useAccessToken(): string | undefined {
   const projectId = useProjectId();
   const vaultDomain = useVaultDomain();
-  const frontendApiClient = useFrontendApiClient();
+  const frontendApiClient = useFrontendApiClientInternal();
 
-  const [relayedSessionState, setRelayedSessionState] = useRelayedSessionState();
   const [refreshToken, setRefreshToken] = useRefreshTokenLocalStorage();
   const [accessToken, setAccessToken] = useAccessTokenLocalStorage();
 
@@ -34,7 +67,7 @@ function useAccessToken(): string | undefined {
   // We exit this mode if there is no relayed session token, or when we're done
   // exchanging the relayed session token.
   const [processingRelayedSession, setProcessingRelayedSession] = useState(true);
-  const [relayedSessionToken, setRelayedSessionToken] = useState<string | undefined>();
+  const strictModeDedupeRelayedSession = useRef(false);
 
   const accessTokenLikelyValid = useAccessTokenLikelyValid(accessToken ?? "");
 
@@ -42,50 +75,32 @@ function useAccessToken(): string | undefined {
 
   // look for a relayed session token; this effect only runs once
   useEffect(() => {
-    const prefix = `#__tesseral_${projectId}_relayed_session_token=`;
-    if (window.location.hash.startsWith(prefix)) {
-      setRelayedSessionToken(window.location.hash.substring(prefix.length));
-
-      // remove hash from window.location
-      history.replaceState(null, "", window.location.pathname + window.location.search);
-    } else {
-      setProcessingRelayedSession(false);
+    // React's StrictMode causes all useEffect callbacks to run twice. We don't
+    // want that to happen here, because want to create a Promise that does
+    // non-idempotent work. Simplest is to avoid creating multiple such
+    // Promises.
+    //
+    // So here, we use a ref to detect whether this is the first time this
+    // useAccessToken hook is trying to detect a relayed session, and aborts if
+    // it isn't.
+    if (strictModeDedupeRelayedSession.current) {
+      return;
     }
-  }, [projectId]);
+    strictModeDedupeRelayedSession.current = true;
 
-  // if we got a relayed session token, then exchange it to acquire an access
-  // token / refresh token pair
-  useEffect(() => {
     (async () => {
-      if (!relayedSessionToken) {
-        return;
-      }
-
       try {
-        const {
-          refreshToken,
-          accessToken,
-          relayedSessionState: relayedSessionStateFromExchange,
-        } = await exchangeRelayedSessionToken({
-          vaultDomain,
-          relayedSessionToken,
-        });
-
-        const exchangeStateSHA256 = await sha256(relayedSessionStateFromExchange);
-        if (exchangeStateSHA256 !== relayedSessionState) {
-          throw new Error("Relayed session state does not match expected value");
+        const result = await handleRelayedSession({ vaultDomain, projectId });
+        if (result) {
+          setRefreshToken(result.refreshToken);
+          setAccessToken(result.accessToken);
         }
-
-        setRefreshToken(refreshToken);
-        setAccessToken(accessToken);
-        setRelayedSessionState(null);
-        setRelayedSessionToken(undefined);
         setProcessingRelayedSession(false);
       } catch (e) {
         setError(e);
       }
     })();
-  }, [relayedSessionState, relayedSessionToken, setAccessToken, setRefreshToken, setRelayedSessionState, vaultDomain]);
+  }, [vaultDomain, projectId, setRefreshToken, setAccessToken]);
 
   // whenever the access token is invalid or near-expired, refresh it
   useEffect(() => {
@@ -105,11 +120,21 @@ function useAccessToken(): string | undefined {
         return; // appease typescript
       }
 
-      const { accessToken } = await frontendApiClient.refresh({
-        refreshToken,
-      });
+      try {
+        const { accessToken } = await frontendApiClient.refresh({
+          refreshToken,
+        });
 
-      setAccessToken(accessToken!);
+        setAccessToken(accessToken!);
+      } catch (e) {
+        if (e instanceof TesseralError && e.statusCode === 401) {
+          // our refresh token is no good
+          await redirectToVaultLogin({ projectId, vaultDomain });
+          return;
+        }
+
+        setError(e);
+      }
     })();
   }, [
     accessTokenLikelyValid,
@@ -136,6 +161,43 @@ function useAccessToken(): string | undefined {
   if (accessTokenLikelyValid) {
     return accessToken!;
   }
+}
+
+async function handleRelayedSession({
+  vaultDomain,
+  projectId,
+}: {
+  vaultDomain: string;
+  projectId: string;
+}): Promise<{ accessToken: string; refreshToken: string } | undefined> {
+  const prefix = `#__tesseral_${projectId}_relayed_session_token=`;
+  if (!window.location.hash.startsWith(prefix)) {
+    return;
+  }
+
+  const relayedSessionToken = window.location.hash.substring(prefix.length);
+
+  // remove hash from window.location
+  history.replaceState(null, "", window.location.pathname + window.location.search);
+
+  const {
+    refreshToken,
+    accessToken,
+    relayedSessionState: relayedSessionStateFromExchange,
+  } = await exchangeRelayedSessionToken({
+    vaultDomain,
+    relayedSessionToken,
+  });
+
+  const exchangeStateSHA256 = await sha256(relayedSessionStateFromExchange);
+  const savedState = localStorage.getItem(`tesseral_${projectId}_relayed_session_state`);
+  if (exchangeStateSHA256 !== savedState) {
+    throw new Error("Relayed session state does not match expected value");
+  }
+
+  localStorage.removeItem(`tesseral_${projectId}_relayed_session_state`);
+
+  return { refreshToken, accessToken };
 }
 
 async function exchangeRelayedSessionToken({

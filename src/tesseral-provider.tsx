@@ -6,19 +6,16 @@ import { InternalAccessTokenContext } from "./internal-access-token-context";
 import { parseAccessToken } from "./parse-access-token";
 import { PublishableKeyConfigProvider, useDevMode, useProjectId, useVaultDomain } from "./publishable-key-config";
 import { TesseralContext } from "./tesseral-context";
-import { useFrontendApiClient } from "./use-frontend-api-client";
-
-interface TesseralProviderProps {
-  publishableKey: string;
-  configApiHostname: string;
-  children?: React.ReactNode;
-}
 
 export function TesseralProvider({
   publishableKey,
   configApiHostname = "config.tesseral.com",
   children,
-}: TesseralProviderProps) {
+}: {
+  publishableKey: string;
+  configApiHostname?: string;
+  children?: React.ReactNode;
+}) {
   return (
     <PublishableKeyConfigProvider publishableKey={publishableKey} configApiHostname={configApiHostname}>
       <TesseralProviderWithConfig>
@@ -41,9 +38,8 @@ function TesseralProviderWithConfig({ children }: { children?: React.ReactNode }
 function TesseralProviderWithAccessToken({ children }: { children?: React.ReactNode }) {
   const projectId = useProjectId();
   const vaultDomain = useVaultDomain();
-  const frontendApiClient = useFrontendApiClient();
 
-  const accessToken = useContext(InternalAccessTokenContext);
+  const { accessToken, frontendApiClient } = useContext(InternalAccessTokenContext)!;
   const parsedAccessToken = useMemo(() => {
     return parseAccessToken(accessToken);
   }, [accessToken]);

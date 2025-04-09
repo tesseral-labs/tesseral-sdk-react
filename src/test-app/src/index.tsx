@@ -1,4 +1,4 @@
-import React, { StrictMode } from "react";
+import React, { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 import {
@@ -7,6 +7,7 @@ import {
   useLogout,
   useOrganization,
   useOrganizationSettingsUrl,
+  useTesseral,
   useUser,
   useUserSettingsUrl,
 } from "../../index";
@@ -18,6 +19,14 @@ function App() {
   const userSettingsUrl = useUserSettingsUrl();
   const organizationSettingsUrl = useOrganizationSettingsUrl();
   const logout = useLogout();
+  const { frontendApiClient } = useTesseral();
+
+  const [data, setData] = useState<unknown>();
+  useEffect(() => {
+    (async () => {
+      setData(await frontendApiClient.me.whoami({}));
+    })();
+  }, [frontendApiClient.me]);
 
   return (
     <div>
@@ -27,16 +36,17 @@ function App() {
       <a href={organizationSettingsUrl}>Organization Settings</a>
       <pre>{accessToken}</pre>
       <button onClick={() => logout()}>logout</button>
+
+      <pre>{JSON.stringify(data, null, 2)}</pre>
     </div>
   );
 }
 
 const root = createRoot(document.getElementById("react-root") as HTMLElement);
 root.render(
-  <TesseralProvider
-    publishableKey="publishable_key_1sd75fpowmox764gfwrrxeehn"
-    configApiHostname="config.tesseral.example.com"
-  >
-    <App />
-  </TesseralProvider>,
+  <StrictMode>
+    <TesseralProvider publishableKey="publishable_key_6kdiksy1lnq9hi1bh4s83nu3c">
+      <App />
+    </TesseralProvider>
+  </StrictMode>,
 );

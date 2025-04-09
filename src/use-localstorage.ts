@@ -1,8 +1,6 @@
 import { useCallback, useSyncExternalStore } from "react";
 
-export function useLocalStorage(
-  key: string,
-): [string | null, (value: string | null) => void] {
+export function useLocalStorage(key: string): [string | null, (value: string | null) => void] {
   const store = useSyncExternalStore(
     // subscribe
     (callback) => {

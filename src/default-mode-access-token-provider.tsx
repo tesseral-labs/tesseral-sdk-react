@@ -1,25 +1,38 @@
 import { TesseralError } from "@tesseral/tesseral-vanilla-clientside";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import { useAccessTokenLikelyValid } from "./access-token-likely-valid";
 import { getCookie } from "./cookie";
-import { InternalAccessTokenContext } from "./internal-access-token-context";
+import { InternalAccessTokenContext, InternalAccessTokenContextValue } from "./internal-access-token-context";
 import { useProjectId, useVaultDomain } from "./publishable-key-config";
-import { useFrontendApiClient } from "./use-frontend-api-client";
+import { useFrontendApiClientInternal } from "./use-frontend-api-client-internal";
 
 export function DefaultModeAccessTokenProvider({ children }: { children?: React.ReactNode }) {
   const accessToken = useAccessToken();
-  if (!accessToken) {
+  const frontendApiClient = useFrontendApiClientInternal();
+
+  const contextValue = useMemo(() => {
+    return {
+      accessToken,
+      frontendApiClient,
+    };
+  }, [accessToken, frontendApiClient]);
+
+  if (!contextValue.accessToken) {
     return null;
   }
 
-  return <InternalAccessTokenContext value={accessToken}>{children}</InternalAccessTokenContext>;
+  return (
+    <InternalAccessTokenContext value={contextValue as InternalAccessTokenContextValue}>
+      {children}
+    </InternalAccessTokenContext>
+  );
 }
 
 function useAccessToken(): string | undefined {
   const projectId = useProjectId();
   const vaultDomain = useVaultDomain();
-  const frontendApiClient = useFrontendApiClient();
+  const frontendApiClient = useFrontendApiClientInternal();
 
   const [error, setError] = useState<unknown>();
   const accessToken = getCookie(`tesseral_${projectId}_access_token`);
