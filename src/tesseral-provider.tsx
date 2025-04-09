@@ -7,17 +7,15 @@ import { parseAccessToken } from "./parse-access-token";
 import { PublishableKeyConfigProvider, useDevMode, useProjectId, useVaultDomain } from "./publishable-key-config";
 import { TesseralContext } from "./tesseral-context";
 
-interface TesseralProviderProps {
-  publishableKey: string;
-  configApiHostname: string;
-  children?: React.ReactNode;
-}
-
 export function TesseralProvider({
   publishableKey,
   configApiHostname = "config.tesseral.com",
   children,
-}: TesseralProviderProps) {
+}: {
+  publishableKey: string;
+  configApiHostname?: string;
+  children?: React.ReactNode;
+}) {
   return (
     <PublishableKeyConfigProvider publishableKey={publishableKey} configApiHostname={configApiHostname}>
       <TesseralProviderWithConfig>
