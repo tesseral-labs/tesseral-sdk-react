@@ -28,9 +28,9 @@ export function DevModeAccessTokenProvider({ children }: { children?: React.Reac
 
   return (
     // without `as`, typescript thinks contextValue.accessToken may be undefined
-    <InternalAccessTokenContext value={contextValue as InternalAccessTokenContextValue}>
+    <InternalAccessTokenContext.Provider value={contextValue as InternalAccessTokenContextValue}>
       {children}
-    </InternalAccessTokenContext>
+    </InternalAccessTokenContext.Provider>
   );
 }
 

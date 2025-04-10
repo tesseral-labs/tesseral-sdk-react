@@ -23,9 +23,9 @@ export function DefaultModeAccessTokenProvider({ children }: { children?: React.
   }
 
   return (
-    <InternalAccessTokenContext value={contextValue as InternalAccessTokenContextValue}>
+    <InternalAccessTokenContext.Provider value={contextValue as InternalAccessTokenContextValue}>
       {children}
-    </InternalAccessTokenContext>
+    </InternalAccessTokenContext.Provider>
   );
 }
 
