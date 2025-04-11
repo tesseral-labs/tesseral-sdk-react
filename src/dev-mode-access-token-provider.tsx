@@ -158,9 +158,7 @@ function useAccessToken(): string | undefined {
     throw error;
   }
 
-  if (accessTokenLikelyValid) {
-    return accessToken!;
-  }
+  return accessToken ?? undefined;
 }
 
 async function handleRelayedSession({
