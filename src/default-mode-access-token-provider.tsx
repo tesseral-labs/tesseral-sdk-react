@@ -33,7 +33,9 @@ function useAccessToken(): string | undefined {
   const projectId = useProjectId();
   const vaultDomain = useVaultDomain();
   const frontendApiClient = useFrontendApiClientInternal();
-  const [accessToken, setAccessToken] = useState<string | undefined>(getCookie(`tesseral_${projectId}_access_token`));
+  const [accessToken, setAccessToken] = useState<string | undefined>(() => {
+    return getCookie(`tesseral_${projectId}_access_token`);
+  });
 
   const [error, setError] = useState<unknown>();
   const accessTokenLikelyValid = useAccessTokenLikelyValid(accessToken ?? "");
