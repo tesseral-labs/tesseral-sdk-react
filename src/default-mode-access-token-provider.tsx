@@ -33,9 +33,11 @@ function useAccessToken(): string | undefined {
   const projectId = useProjectId();
   const vaultDomain = useVaultDomain();
   const frontendApiClient = useFrontendApiClientInternal();
+  const [accessToken, setAccessToken] = useState<string | undefined>(() => {
+    return getCookie(`tesseral_${projectId}_access_token`);
+  });
 
   const [error, setError] = useState<unknown>();
-  const accessToken = getCookie(`tesseral_${projectId}_access_token`);
   const accessTokenLikelyValid = useAccessTokenLikelyValid(accessToken ?? "");
 
   // whenever the access token is invalid or near-expired, refresh it
@@ -46,7 +48,8 @@ function useAccessToken(): string | undefined {
 
     (async () => {
       try {
-        await frontendApiClient.refresh({});
+        const { accessToken } = await frontendApiClient.refresh({});
+        setAccessToken(accessToken);
       } catch (e) {
         if (e instanceof TesseralError && e.statusCode === 401) {
           // our refresh token is no good
