@@ -40,6 +40,6 @@
     "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "@tesseral/tesseral-vanilla-clientside": "^0.0.5"
+    "@tesseral/tesseral-vanilla-clientside": "^0.0.6"
   }
 }
