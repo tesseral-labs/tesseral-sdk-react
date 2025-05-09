@@ -52,7 +52,7 @@ export function PublishableKeyConfigProvider({
       return;
     }
 
-    if (!publishableKeyConfig.trustedDomains.includes(location.host)) {
+    if (location.host !== "" && !publishableKeyConfig.trustedDomains.includes(location.host)) {
       setError(
         new Error(
           `Tesseral Project ${publishableKeyConfig.projectId} is not configured to be served from ${location.host}. Only the following domains are allowed:\n\n${publishableKeyConfig.trustedDomains.join("\n")}\n\nGo to https://console.tesseral.com/project-settings and add ${location.host} to your list of trusted domains.`,
