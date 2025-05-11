@@ -39,7 +39,7 @@ function useDevModeFrontendApiClient(accessToken: string) {
 
   return useMemo(() => {
     return new TesseralClient({
-      environment: `https://${vaultDomain}`,
+      environment: `https://${vaultDomain}/api`,
       fetcher: (options) => {
         return fetcher({
           ...options,
