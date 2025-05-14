@@ -60,6 +60,20 @@ export function useUser(): AccessTokenUser {
   return user;
 }
 
+export function useHasPermission(): (action: string) => boolean {
+  const actions = useContext(TesseralContext)?.actions;
+  if (!actions) {
+    throw new Error(`useHasPermission() must be called from a child component of TesseralContext`);
+  }
+
+  return useCallback(
+    (action: string) => {
+      return actions.includes(action);
+    },
+    [actions],
+  );
+}
+
 export function useLogout(): () => void {
   // this code may call a variable number of hooks, but we're throwing in such
   // cases anyway

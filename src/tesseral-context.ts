@@ -10,6 +10,7 @@ export interface TesseralContextValue {
   projectId: string;
   vaultDomain: string;
   accessToken: string;
+  actions: string[];
   organization: AccessTokenOrganization;
   user: AccessTokenUser;
   session: AccessTokenSession;
