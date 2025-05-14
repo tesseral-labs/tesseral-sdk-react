@@ -4,6 +4,7 @@ export {
   useAccessToken,
   useOrganization,
   useUser,
+  useHasPermission,
   useOrganizationSettingsUrl,
   useUserSettingsUrl,
   useLogout,

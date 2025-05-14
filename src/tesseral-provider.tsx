@@ -49,6 +49,7 @@ function TesseralProviderWithAccessToken({ children }: { children?: React.ReactN
       projectId,
       vaultDomain,
       accessToken,
+      actions: parsedAccessToken.actions ?? [],
       organization: parsedAccessToken.organization!,
       user: parsedAccessToken.user!,
       session: parsedAccessToken.session!,
