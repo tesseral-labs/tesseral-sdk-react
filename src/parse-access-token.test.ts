@@ -27,6 +27,13 @@ test("should parse valid access token", () => {
   expect(parseAccessToken(token)).toEqual(expected);
 });
 
+test("should parse UTF-8 values in access token", () => {
+  const claims = { sub: "😃" };
+  const encodedClaims = Buffer.from(JSON.stringify(claims)).toString("base64url");
+  const token = `testHeader.${encodedClaims}.testSignature`;
+  expect(parseAccessToken(token)).toEqual(claims);
+});
+
 test("should throw error for invalid access token", () => {
   const token = "invalid.token.string";
   expect(() => parseAccessToken(token)).toThrow();
