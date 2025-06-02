@@ -1,6 +1,6 @@
-import { parseAccessToken } from "parse-access-token";
 import { useMemo } from "react";
 
+import { parseAccessToken } from "./parse-access-token";
 import { useDebouncedNow } from "./use-debounced-now";
 
 const ACCESS_TOKEN_EXPIRY_BUFFER_MILLIS = 10 * 1000;
