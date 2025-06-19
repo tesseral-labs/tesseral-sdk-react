@@ -1,7 +1,7 @@
 import { TesseralError } from "@tesseral/tesseral-vanilla-clientside";
 import React, { useEffect, useMemo, useState } from "react";
 
-import { useAccessTokenLikelyValid } from "./access-token-likely-valid";
+import { useAccessTokenLikelyExpired, useAccessTokenLikelyValid } from "./access-token-likely-valid";
 import { getCookie } from "./cookie";
 import { InternalAccessTokenContext, InternalAccessTokenContextValue } from "./internal-access-token-context";
 import { useProjectId, useVaultDomain } from "./publishable-key-config";
@@ -39,6 +39,7 @@ function useAccessToken(): string | undefined {
 
   const [error, setError] = useState<unknown>();
   const accessTokenLikelyValid = useAccessTokenLikelyValid(accessToken ?? "");
+  const accessTokenLikelyExpired = useAccessTokenLikelyExpired(accessToken ?? "");
 
   // whenever the access token is invalid or near-expired, refresh it
   useEffect(() => {
@@ -66,5 +67,9 @@ function useAccessToken(): string | undefined {
     throw error;
   }
 
+  // if the access token is likely expired, don't return it; wait for refresh
+  if (accessTokenLikelyExpired) {
+    return;
+  }
   return accessToken;
 }
