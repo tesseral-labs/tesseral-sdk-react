@@ -241,7 +241,8 @@ async function redirectToVaultLogin({ projectId, vaultDomain }: { projectId: str
 
   const loginUrl = new URL(`https://${vaultDomain}/login`);
   loginUrl.searchParams.set("relayed-session-state", relayedSessionState);
-  loginUrl.searchParams.set("redirect-uri", window.location.href);
+  const redirectUrl = new URL(window.location.pathname, window.location.origin);
+  loginUrl.searchParams.set("redirect-uri", redirectUrl.toString());
 
   window.location.href = loginUrl.toString();
 }

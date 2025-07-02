@@ -55,7 +55,8 @@ function useAccessToken(): string | undefined {
         if (e instanceof TesseralError && e.statusCode === 401) {
           // our refresh token is no good
           const loginUrl = new URL(`https://${vaultDomain}/login`);
-          loginUrl.searchParams.set("redirect-uri", window.location.href);
+          const redirectUrl = new URL(window.location.pathname, window.location.origin);
+          loginUrl.searchParams.set("redirect-uri", redirectUrl.toString());
           window.location.href = loginUrl.toString();
           return;
         }
