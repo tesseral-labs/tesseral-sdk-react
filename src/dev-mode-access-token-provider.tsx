@@ -238,5 +238,10 @@ async function exchangeRelayedSessionToken({
 async function redirectToVaultLogin({ projectId, vaultDomain }: { projectId: string; vaultDomain: string }) {
   const relayedSessionState = crypto.randomUUID();
   localStorage.setItem(`tesseral_${projectId}_relayed_session_state`, await sha256(relayedSessionState));
-  window.location.href = `https://${vaultDomain}/login?relayed-session-state=${relayedSessionState}`;
+
+  const loginUrl = new URL(`https://${vaultDomain}/login`);
+  loginUrl.searchParams.set("relayed-session-state", relayedSessionState);
+  loginUrl.searchParams.set("redirect-uri", window.location.href);
+
+  window.location.href = loginUrl.toString();
 }
